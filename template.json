@@ -1,0 +1,690 @@
+{
+  "Description": "Deploy an Elastic Beanstalk app stored in CodeCommit via CodePipeline.",
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters": {
+    "RepositoryName": {
+      "Description": "The name of your repo.",
+      "Type": "String"
+    },
+    "BranchName": {
+      "Description": "The name of the repo branch",
+      "Type": "String",
+      "Default": "master"
+    },
+    "GitHubOwner": {
+      "Type": "String"
+    },
+    "GitHubOAuthToken": {
+      "Type": "String",
+      "NoEcho": true
+    },
+    "VpcId": {
+      "Type": "AWS::EC2::VPC::Id"
+    }
+  },
+  "Resources": {
+    "CodePipelineArtifactStoreBucket": {
+      "Type": "AWS::S3::Bucket"
+    },
+    "OAuthAccessTokenTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "OAuthAccessToken",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "tokenId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "authenticationId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "clientId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "userName",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "refreshToken",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "tokenId",
+            "KeyType": "HASH"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": "5",
+          "WriteCapacityUnits": "5"
+        },
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "authenticationId-index",
+            "KeySchema": [
+              {
+                "AttributeName": "authenticationId",
+                "KeyType": "HASH"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            },
+            "ProvisionedThroughput": {
+              "ReadCapacityUnits": "5",
+              "WriteCapacityUnits": "5"
+            }
+          },
+          {
+            "IndexName": "clientId-userName-index",
+            "KeySchema": [
+              {
+                "AttributeName": "clientId",
+                "KeyType": "HASH"
+              },
+              {
+                "AttributeName": "userName",
+                "KeyType": "RANGE"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            },
+            "ProvisionedThroughput": {
+              "ReadCapacityUnits": "5",
+              "WriteCapacityUnits": "5"
+            }
+          },
+          {
+            "IndexName": "refreshToken-index",
+            "KeySchema": [
+              {
+                "AttributeName": "refreshToken",
+                "KeyType": "HASH"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            },
+            "ProvisionedThroughput": {
+              "ReadCapacityUnits": "5",
+              "WriteCapacityUnits": "5"
+            }
+          }
+        ]
+      }
+    },
+    "OAuthCodeTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "OAuthCode",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "code",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "code",
+            "KeyType": "HASH"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": "5",
+          "WriteCapacityUnits": "5"
+        }
+      }
+    },
+    "OAuthClientDetailsTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "OAuthClientDetails",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "clientId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "clientId",
+            "KeyType": "HASH"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": "5",
+          "WriteCapacityUnits": "5"
+        }
+      }
+    },
+
+    "OAuthRefreshTokenTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "OAuthRefreshToken",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "tokenId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "tokenId",
+            "KeyType": "HASH"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": "5",
+          "WriteCapacityUnits": "5"
+        }
+      }
+    },
+    "OAuthPartnerTokenTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "OAuthPartnerToken",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "tokenId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "authenticationId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "clientId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "userName",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "tokenId",
+            "KeyType": "HASH"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": "5",
+          "WriteCapacityUnits": "5"
+        },
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "authenticationId-index",
+            "KeySchema": [
+              {
+                "AttributeName": "authenticationId",
+                "KeyType": "HASH"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            },
+            "ProvisionedThroughput": {
+              "ReadCapacityUnits": "5",
+              "WriteCapacityUnits": "5"
+            }
+          },
+          {
+            "IndexName": "clientId-userName-index",
+            "KeySchema": [
+              {
+                "AttributeName": "clientId",
+                "KeyType": "HASH"
+              },
+              {
+                "AttributeName": "userName",
+                "KeyType": "RANGE"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            },
+            "ProvisionedThroughput": {
+              "ReadCapacityUnits": "5",
+              "WriteCapacityUnits": "5"
+            }
+          }
+        ]
+      }
+    },
+    "OAuthPartnerTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "OAuthPartner",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "partnerId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "partnerId",
+            "KeyType": "HASH"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": "5",
+          "WriteCapacityUnits": "5"
+        }
+      }
+    },
+    "OAuthApplication": {
+      "Type": "AWS::ElasticBeanstalk::Application",
+      "Properties": {
+        "Description": "AWS Elastic Beanstalk Sample Application"
+      }
+    },
+    "OAuthConfigurationTemplate": {
+      "Type": "AWS::ElasticBeanstalk::ConfigurationTemplate",
+      "Properties": {
+        "ApplicationName": {
+          "Ref": "OAuthApplication"
+        },
+        "Description": "AWS ElasticBeanstalk Sample Configuration Template",
+        "OptionSettings": [
+          {
+            "Namespace": "aws:autoscaling:launchconfiguration",
+            "OptionName": "IamInstanceProfile",
+            "Value": {
+              "Ref": "OAuthInstanceProfile"
+            }
+          },
+          {
+            "Namespace": "aws:autoscaling:launchconfiguration",
+            "OptionName": "InstanceType",
+            "Value": "t2.small"
+          },
+          {
+            "Namespace": "aws:elasticbeanstalk:command",
+            "OptionName": "DeploymentPolicy",
+            "Value": "Rolling"
+          },
+          {
+            "Namespace": "aws:elasticbeanstalk:command",
+            "OptionName": "BatchSize",
+            "Value": "50"
+          },
+          {
+            "Namespace": "aws:autoscaling:updatepolicy:rollingupdate",
+            "OptionName": "RollingUpdateEnabled",
+            "Value": "true"
+          },
+          {
+            "Namespace": "aws:autoscaling:updatepolicy:rollingupdate",
+            "OptionName": "RollingUpdateType",
+            "Value": "Health"
+          },
+          {
+            "Namespace": "aws:elasticbeanstalk:healthreporting:system",
+            "OptionName": "SystemType",
+            "Value": "enhanced"
+          },
+          {
+            "Namespace": "aws:autoscaling:asg",
+            "OptionName": "MinSize",
+            "Value": "2"
+          },
+          {
+            "Namespace": "aws:autoscaling:asg",
+            "OptionName": "MaxSize",
+            "Value": "6"
+          },
+          {
+            "Namespace": "aws:elasticbeanstalk:environment",
+            "OptionName": "EnvironmentType",
+            "Value": "LoadBalanced"
+          }
+        ],
+        "SolutionStackName": "64bit Amazon Linux 2018.03 v2.8.3 running Java 8"
+      }
+    },
+    "OAuthEnvironment": {
+      "Type": "AWS::ElasticBeanstalk::Environment",
+      "DependsOn": [
+        "OAuthApplication",
+        "OAuthConfigurationTemplate"
+      ],
+      "Properties": {
+        "ApplicationName": {
+          "Ref": "OAuthApplication"
+        },
+        "Description": "AWS ElasticBeanstalk Sample OAuth Environment",
+        "TemplateName": {
+          "Ref": "OAuthConfigurationTemplate"
+        }
+      }
+    },
+    "OAuthApplicationRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "codebuild.amazonaws.com",
+                  "codedeploy.amazonaws.com",
+                  "codepipeline.amazonaws.com",
+                  "codestar.amazonaws.com",
+                  "elasticbeanstalk.amazonaws.com",
+                  "events.amazonaws.com",
+                  "lambda.amazonaws.com",
+                  "dynamodb.amazonaws.com"
+                ]
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/AWSCodeCommitFullAccess",
+          "arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess",
+          "arn:aws:iam::aws:policy/AWSCodeDeployFullAccess",
+          "arn:aws:iam::aws:policy/AWSCodePipelineFullAccess",
+          "arn:aws:iam::aws:policy/AWSElasticBeanstalkFullAccess",
+          "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
+          "arn:aws:iam::aws:policy/AWSCodeStarFullAccess",
+          "arn:aws:iam::aws:policy/CloudWatchEventsFullAccess",
+          "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+        ],
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "codepipeline-service",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "kms:*",
+                    "codecommit:*",
+                    "codedeploy:*",
+                    "s:*",
+                    "elasticbeanstalk:*",
+                    "ec2:*",
+                    "elasticloadbalancing:*",
+                    "lambda:*",
+                    "autoscaling:*",
+                    "cloudwatch:*",
+                    "sns:*",
+                    "sqs:*",
+                    "cloudformation:*",
+                    "rds:*",
+                    "ecs:*",
+                    "dynamodb:*",
+                    "iam:PassRole"
+
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                }
+              ],
+              "Version": "2012-10-17"
+            }
+          }
+        ]
+      }
+    },
+    "OAuthInstanceProfile": {
+      "Properties": {
+        "Roles": [
+          {
+            "Ref": "OAuthInstanceRole"
+          }
+        ]
+      },
+      "Type": "AWS::IAM::InstanceProfile"
+    },
+    "OAuthInstanceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "OAuthInstanceRole",
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier",
+          "arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier",
+          "arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker",
+          "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+        ],
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "CodeBuildProject": {
+      "DependsOn": [
+        "OAuthApplicationRole"
+      ],
+      "Properties": {
+        "Name": "OAuthBuild",
+        "Artifacts": {
+          "Packaging": "zip",
+          "Type": "codepipeline"
+        },
+        "Environment": {
+          "ComputeType": "small",
+          "Image": "aws/codebuild/eb-java-8-amazonlinux-64:2.4.3",
+          "Type": "LINUX_CONTAINER"
+        },
+        "ServiceRole": {
+          "Ref": "OAuthApplicationRole"
+        },
+        "Source": {
+          "Type": "codepipeline"
+        }
+      },
+      "Type": "AWS::CodeBuild::Project"
+    },
+    "CodePipelineStack": {
+      "Type": "AWS::CodePipeline::Pipeline",
+      "DependsOn": [
+        "OAuthApplication",
+        "OAuthEnvironment"
+      ],
+      "Properties": {
+        "RoleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:iam::",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":role/",
+              {
+                "Ref": "OAuthApplicationRole"
+              }
+            ]
+          ]
+        },
+        "Stages": [
+          {
+            "Name": "Source",
+            "Actions": [
+              {
+                "Name": "SourceAction",
+                "ActionTypeId": {
+                  "Category": "Source",
+                  "Owner": "ThirdParty",
+                  "Version": 1,
+                  "Provider": "GitHub"
+                },
+                "OutputArtifacts": [
+                  {
+                    "Name": "SourceOutput"
+                  }
+                ],
+                "Configuration": {
+                  "Owner": {
+                    "Ref": "GitHubOwner"
+                  },
+                  "Repo": {
+                    "Ref": "RepositoryName"
+                  },
+                  "Branch": {
+                    "Ref": "BranchName"
+                  },
+                  "OAuthToken": {
+                    "Ref": "GitHubOAuthToken"
+                  },
+                  "PollForSourceChanges": true
+                },
+                "RunOrder": 1
+              }
+            ]
+          },
+          {
+            "Name": "Build",
+            "Actions": [
+              {
+                "Name": "CodeBuild",
+                "InputArtifacts": [
+                  {
+                    "Name": "SourceOutput"
+                  }
+                ],
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": 1
+                },
+                "Configuration": {
+                  "ProjectName": "OAuthBuild"
+                },
+                "OutputArtifacts": [
+                  {
+                    "Name": {
+                      "Fn::Sub": "BuildArtifact"
+                    }
+                  }
+                ],
+                "RunOrder": 1
+              }
+            ]
+          },
+          {
+            "Name": "Deploy",
+            "Actions": [
+              {
+                "InputArtifacts": [
+                  {
+                    "Name": "BuildArtifact"
+                  }
+                ],
+                "Name": "EbApp",
+                "ActionTypeId": {
+                  "Category": "Deploy",
+                  "Owner": "AWS",
+                  "Version": "1",
+                  "Provider": "ElasticBeanstalk"
+                },
+                "OutputArtifacts": [
+                ],
+                "Configuration": {
+                  "ApplicationName": {
+                    "Ref": "OAuthApplication"
+                  },
+                  "EnvironmentName": {
+                    "Ref": "OAuthEnvironment"
+                  }
+                },
+                "RunOrder": 1
+              }
+            ]
+          }
+        ],
+        "ArtifactStore": {
+          "Type": "S3",
+          "Location": {
+            "Ref": "CodePipelineArtifactStoreBucket"
+          }
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "AppURL": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "http://",
+            {
+              "Fn::GetAtt": [
+                "OAuthEnvironment",
+                "EndpointURL"
+              ]
+            },
+            "/"
+          ]
+        ]
+      },
+      "Description": "URL for the working OAuth application"
+    },
+    "CodePipelineURL": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://console.aws.amazon.com/codepipeline/home?region=",
+            {
+              "Ref": "AWS::Region"
+            },
+            "#/view/",
+            {
+              "Ref": "CodePipelineStack"
+            }
+          ]
+        ]
+      },
+      "Description": "Pipeline URL"
+    },
+    "OAuthApplication": {
+      "Value": {
+        "Ref": "OAuthApplication"
+      }
+    },
+    "OAuthConfigurationTemplate": {
+      "Value": {
+        "Ref": "OAuthConfigurationTemplate"
+      },
+      "Description": "The Elastic Beanstalk configuration"
+    },
+    "OAuthEnvironment": {
+      "Value": {
+        "Ref": "OAuthEnvironment"
+      },
+      "Description": "The Elastic Beanstalk environment on which the application runs"
+    },
+    "OAuthApplicationRole": {
+      "Value": {
+        "Ref": "OAuthApplicationRole"
+      },
+      "Description": "The IAM role associated with CodePipeline pipeline"
+    }
+  }
+}

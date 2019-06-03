@@ -1,0 +1,13 @@
+server:
+  port: 5000
+  tomcat:
+    use-relative-redirects: true
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+        web:
+          filter:
+            CommonsRequestLoggingFilter: DEBUG
