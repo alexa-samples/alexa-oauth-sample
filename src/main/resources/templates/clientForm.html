@@ -109,8 +109,8 @@
                                         <p>The client can get an access token without the user authorizing it from the /token endpoint using basic authentication with its id and
                                             secret.
                                             Only for trusted clients. See curl client example. The client secret must be set for this grant type. The admin can specify the roles
-                                            the client will have on the resource
-                                            servers.</p>
+                                            the client will have on the resource servers.</p>
+                                        <p>The client uses the /oauth/token?grant_type=client_credentials&client_id=$clientId&amp;client_secret=$client_secret endpoint to get the access token.</p>
 
                                         <p>You could imagine a client script with an admin role but only read scope that runs on a trusted server of you and pulls some data
                                             periodically.</p>
@@ -138,8 +138,7 @@
                                     <li><b>refresh_token</b></li>
                                     <li><b>password</b>
 
-                                        <p>The client asks the user for his credentials and forwards them. Only for clients that you wrote yourself like an official app for a
-                                            phone.</p>
+                                        <p>The client asks the user for his credentials and forwards them. Only for clients where you maintain authority of identity</p>
                                     </li>
                                 </ul>
                             </div>

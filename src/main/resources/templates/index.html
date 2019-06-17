@@ -42,9 +42,7 @@
                             <input type="hidden" name="userId" th:value="${approval.userId}"/>
                             <input type="hidden" name="clientId" th:value="${approval.clientId}"/>
                             <input type="hidden" name="scope" th:value="${approval.scope}"/>
-                            <!--<input type="hidden" name="expiresAt" th:value="${#dates.format(approval.expiresAt, 'yyyy-MM-dd HH:mm:ss')}"/>-->
                             <input type="hidden" name="status" th:value="${approval.status}"/>
-                            <!--<input type="hidden" name="lastUpdatedAt" th:value="${#dates.format(approval.lastUpdatedAt, 'yyyy-MM-dd HH:mm:ss')}"/>-->
                             <button type="submit" class="btn btn-default btn-xs">
                                 <span class="glyphicon glyphicon-trash"></span>
                             </button>

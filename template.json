@@ -346,7 +346,7 @@
             "Value": "LoadBalanced"
           }
         ],
-        "SolutionStackName": "64bit Amazon Linux 2018.03 v2.8.3 running Java 8"
+        "SolutionStackName": "64bit Amazon Linux 2018.03 v2.8.5 running Java 8"
       }
     },
     "OAuthEnvironment": {

@@ -10,9 +10,10 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
@@ -23,12 +24,13 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Data
-@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@RequiredArgsConstructor
 @DynamoDBTable(tableName = "OAuthCode")
 public class OAuthCode {
     @DynamoDBHashKey
+    @NonNull
     String code;
 
     @DynamoDBTypeConverted(converter = OAuth2AuthenticationConverter.class)

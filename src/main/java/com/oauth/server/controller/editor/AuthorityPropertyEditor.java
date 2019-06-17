@@ -10,6 +10,7 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyEditor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
@@ -54,7 +55,7 @@ public class AuthorityPropertyEditor implements PropertyEditor {
 
     @Override
     public void setAsText(String text) throws IllegalArgumentException {
-        if (text != null && !text.isEmpty()) {
+        if (StringUtils.isNotBlank(text)) {
             this.grantedAuthority = new SimpleGrantedAuthority(text);
         }
     }

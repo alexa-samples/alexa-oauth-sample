@@ -9,13 +9,15 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
 import com.oauth.server.dto.OAuthPartner;
 import java.util.List;
-import org.springframework.security.oauth2.provider.ClientAlreadyExistsException;
+import lombok.NonNull;
+import lombok.extern.log4j.Log4j2;
 
 /**
  * A DAO to access {@link OAuthPartner} in DynamoDB.
  *
  * @author Lucun Cai
  */
+@Log4j2
 public class DynamoDBPartnerDetailsDAO {
 
     private DynamoDBMapper dynamoDBMapper;
@@ -24,19 +26,45 @@ public class DynamoDBPartnerDetailsDAO {
         this.dynamoDBMapper = dynamoDBMapper;
     }
 
-    public OAuthPartner loadPartnerByPartnerId(String partnerId) {
+    /**
+     * Returns an OAuthPartner object whose keys match those of the prototype key object given, or null if no such item exists.
+     *
+     * @param partnerId partnerId.
+     * @return {@link OAuthPartner} or null if not found.
+     */
+    public OAuthPartner loadPartnerByPartnerId(@NonNull String partnerId) {
         return dynamoDBMapper.load(OAuthPartner.class, partnerId);
     }
 
+    /**
+     * Scans through an Amazon DynamoDB table and returns the matching results as an unmodifiable list of instantiated objects.
+     *
+     * @return a list of {@link OAuthPartner}.
+     */
     public List<OAuthPartner> listPartners() {
         return dynamoDBMapper.scan(OAuthPartner.class, new DynamoDBScanExpression());
     }
 
-    public void savePartner(OAuthPartner partner) throws ClientAlreadyExistsException {
+    /**
+     * Save the {@link OAuthPartner} provided.
+     *
+     * @param partner {@link OAuthPartner}
+     */
+    public void savePartner(OAuthPartner partner) {
         dynamoDBMapper.save(partner);
     }
 
-    public void deletePartnerByPartnerId(String partnerId) throws ClientAlreadyExistsException {
-        dynamoDBMapper.delete(OAuthPartner.builder().partnerId(partnerId).build());
+    /**
+     * Delete the {@link OAuthPartner} by partnerId.
+     *
+     * @param partnerId
+     */
+    public void deletePartnerByPartnerId(@NonNull String partnerId) {
+        OAuthPartner partner = dynamoDBMapper.load(OAuthPartner.class, partnerId);
+        if (partner == null) {
+            log.error("partner {} already deleted.", partnerId);
+        } else {
+            dynamoDBMapper.delete(partner);
+        }
     }
 }

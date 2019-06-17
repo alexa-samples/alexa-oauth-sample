@@ -32,6 +32,13 @@ public class DynamoDBPartnerTokenDAO implements ClientTokenServices {
         this.keyGenerator = new DefaultClientKeyGenerator();
     }
 
+    /**
+     * Get the {@link OAuth2AccessToken} of a protected resource for the {@link Authentication} provided.
+     *
+     * @param resource partner protected resource.
+     * @param authentication user authentication.
+     * @return oauth access token.
+     */
     @Override
     public OAuth2AccessToken getAccessToken(OAuth2ProtectedResourceDetails resource, Authentication authentication) {
         String authenticationId = keyGenerator.extractKey(resource, authentication);
@@ -40,12 +47,19 @@ public class DynamoDBPartnerTokenDAO implements ClientTokenServices {
         return accessTokens.stream().findAny().map(OAuthPartnerToken::getToken).orElse(null);
     }
 
+    /**
+     * Save the {@link OAuth2AccessToken} of a partner protected resource for the {@link Authentication} provided.
+     *
+     * @param resource partner protected resource.
+     * @param authentication user authentication.
+     * @param accessToken oauth access token.
+     */
     @Override
     public void saveAccessToken(OAuth2ProtectedResourceDetails resource,
                                 Authentication authentication,
                                 OAuth2AccessToken accessToken) {
 
-        String userName = authentication == null ? null : authentication.getName();
+        String userName = authentication != null ? authentication.getName() : null;
 
         OAuthPartnerToken oauthPartnerToken = OAuthPartnerToken.builder()
             .tokenId(accessToken.getValue())
@@ -58,6 +72,12 @@ public class DynamoDBPartnerTokenDAO implements ClientTokenServices {
         dynamoDBMapper.save(oauthPartnerToken);
     }
 
+    /**
+     * Remove the all the access token of the partner protected resource for the {@link Authentication} provided.
+     *
+     * @param resource partner protected resource.
+     * @param authentication user authentication.
+     */
     @Override
     public void removeAccessToken(OAuth2ProtectedResourceDetails resource, Authentication authentication) {
         String authenticationId = keyGenerator.extractKey(resource, authentication);

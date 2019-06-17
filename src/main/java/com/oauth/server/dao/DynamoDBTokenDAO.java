@@ -17,7 +17,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2RefreshToken;
@@ -33,7 +32,6 @@ import org.springframework.security.oauth2.provider.token.store.JdbcTokenStore;
  *
  * @author Lucun Cai
  */
-@Log4j2
 public class DynamoDBTokenDAO implements TokenStore {
 
     private final AuthenticationKeyGenerator authenticationKeyGenerator;

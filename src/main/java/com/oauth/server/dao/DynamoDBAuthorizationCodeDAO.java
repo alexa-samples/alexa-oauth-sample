@@ -23,15 +23,27 @@ public class DynamoDBAuthorizationCodeDAO extends RandomValueAuthorizationCodeSe
         this.dynamoDBMapper = dynamoDBMapper;
     }
 
+    /**
+     * Store the authorization code for a authenticated user.
+     *
+     * @param code authorization code.
+     * @param authentication authentication for the user.
+     */
     @Override
     protected void store(String code, OAuth2Authentication authentication) {
-        OAuthCode oAuthCode = OAuthCode.builder().code(code).authentication(authentication).build();
+        OAuthCode oAuthCode = new OAuthCode(code, authentication);
         dynamoDBMapper.save(oAuthCode);
     }
 
+    /**
+     * Remove/Invalidate the authorization code.
+     *
+     * @param code authorization code.
+     * @return user authentication.
+     */
     @Override
     public OAuth2Authentication remove(String code) {
-        OAuthCode oAuthCode = dynamoDBMapper.load(OAuthCode.builder().code(code).build());
+        OAuthCode oAuthCode = dynamoDBMapper.load(new OAuthCode(code));
 
         if (oAuthCode == null) {
             return null;
