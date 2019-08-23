@@ -3,23 +3,30 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Parameters": {
     "RepositoryName": {
-      "Description": "The name of your repo.",
+      "Description": "enter the name of your GitHub source repository",
       "Type": "String"
     },
     "BranchName": {
-      "Description": "The name of the repo branch",
+      "Description": "enter the repository branch",
       "Type": "String",
       "Default": "master"
     },
     "GitHubOwner": {
+      "Description": "enter the GitHub owner of the repository",
       "Type": "String"
     },
     "GitHubOAuthToken": {
+      "Description": "enter the personal access key for your GitHub repository",
       "Type": "String",
       "NoEcho": true
     },
     "VpcId": {
       "Type": "AWS::EC2::VPC::Id"
+    },
+    "ElasticBeanstalkPlatform": {
+      "Description": "enter the latest Java SE version in https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/platforms-supported.html#platforms-supported.javase",
+      "Type": "String",
+      "Default": "64bit Amazon Linux 2018.03 v2.9.1 running Java 8"
     }
   },
   "Resources": {
@@ -58,10 +65,7 @@
             "KeyType": "HASH"
           }
         ],
-        "ProvisionedThroughput": {
-          "ReadCapacityUnits": "5",
-          "WriteCapacityUnits": "5"
-        },
+        "BillingMode": "PAY_PER_REQUEST",
         "GlobalSecondaryIndexes": [
           {
             "IndexName": "authenticationId-index",
@@ -73,10 +77,6 @@
             ],
             "Projection": {
               "ProjectionType": "ALL"
-            },
-            "ProvisionedThroughput": {
-              "ReadCapacityUnits": "5",
-              "WriteCapacityUnits": "5"
             }
           },
           {
@@ -93,10 +93,6 @@
             ],
             "Projection": {
               "ProjectionType": "ALL"
-            },
-            "ProvisionedThroughput": {
-              "ReadCapacityUnits": "5",
-              "WriteCapacityUnits": "5"
             }
           },
           {
@@ -109,10 +105,6 @@
             ],
             "Projection": {
               "ProjectionType": "ALL"
-            },
-            "ProvisionedThroughput": {
-              "ReadCapacityUnits": "5",
-              "WriteCapacityUnits": "5"
             }
           }
         ]
@@ -134,10 +126,7 @@
             "KeyType": "HASH"
           }
         ],
-        "ProvisionedThroughput": {
-          "ReadCapacityUnits": "5",
-          "WriteCapacityUnits": "5"
-        }
+        "BillingMode": "PAY_PER_REQUEST"
       }
     },
     "OAuthClientDetailsTable": {
@@ -156,10 +145,7 @@
             "KeyType": "HASH"
           }
         ],
-        "ProvisionedThroughput": {
-          "ReadCapacityUnits": "5",
-          "WriteCapacityUnits": "5"
-        }
+        "BillingMode": "PAY_PER_REQUEST"
       }
     },
 
@@ -179,10 +165,7 @@
             "KeyType": "HASH"
           }
         ],
-        "ProvisionedThroughput": {
-          "ReadCapacityUnits": "5",
-          "WriteCapacityUnits": "5"
-        }
+        "BillingMode": "PAY_PER_REQUEST"
       }
     },
     "OAuthPartnerTokenTable": {
@@ -213,10 +196,7 @@
             "KeyType": "HASH"
           }
         ],
-        "ProvisionedThroughput": {
-          "ReadCapacityUnits": "5",
-          "WriteCapacityUnits": "5"
-        },
+        "BillingMode": "PAY_PER_REQUEST",
         "GlobalSecondaryIndexes": [
           {
             "IndexName": "authenticationId-index",
@@ -228,10 +208,6 @@
             ],
             "Projection": {
               "ProjectionType": "ALL"
-            },
-            "ProvisionedThroughput": {
-              "ReadCapacityUnits": "5",
-              "WriteCapacityUnits": "5"
             }
           },
           {
@@ -248,10 +224,6 @@
             ],
             "Projection": {
               "ProjectionType": "ALL"
-            },
-            "ProvisionedThroughput": {
-              "ReadCapacityUnits": "5",
-              "WriteCapacityUnits": "5"
             }
           }
         ]
@@ -273,10 +245,7 @@
             "KeyType": "HASH"
           }
         ],
-        "ProvisionedThroughput": {
-          "ReadCapacityUnits": "5",
-          "WriteCapacityUnits": "5"
-        }
+        "BillingMode": "PAY_PER_REQUEST"
       }
     },
     "OAuthApplication": {
@@ -346,7 +315,9 @@
             "Value": "LoadBalanced"
           }
         ],
-        "SolutionStackName": "64bit Amazon Linux 2018.03 v2.8.5 running Java 8"
+        "SolutionStackName": {
+          "Ref": "ElasticBeanstalkPlatform"
+        }
       }
     },
     "OAuthEnvironment": {
