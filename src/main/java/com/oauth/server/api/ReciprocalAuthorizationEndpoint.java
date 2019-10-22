@@ -5,6 +5,7 @@
  */
 package com.oauth.server.api;
 
+import com.oauth.server.babyactivityskills.BabyActivityProfilePublisher;
 import com.oauth.server.dao.DynamoDBPartnerTokenDAO;
 import com.oauth.server.dto.OAuthPartner;
 import com.oauth.server.dao.DynamoDBPartnerDetailsDAO;
@@ -20,11 +21,15 @@ import org.springframework.security.oauth2.client.token.grant.code.Authorization
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.UnsupportedGrantTypeException;
 import org.springframework.security.oauth2.provider.NoSuchClientException;
+import org.springframework.security.oauth2.provider.authentication.BearerTokenExtractor;
+import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Rest Controller for reciprocal authorization endpoint.
@@ -49,6 +54,15 @@ public class ReciprocalAuthorizationEndpoint {
     @Autowired
     private DynamoDBPartnerDetailsDAO partnerDetailsRepository;
 
+    @Autowired
+    private BabyActivityProfilePublisher babyActivityProfilePublisher;
+
+    @Autowired
+    private TokenStore tokenStore;
+
+    @Autowired
+    private HttpServletRequest context;
+
     @RequestMapping(value = "/api/reciprocal/authorize", method = RequestMethod.POST)
     public void postReciprocalCode(final @RequestBody @RequestParam Map<String, String> parameters) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -56,7 +70,9 @@ public class ReciprocalAuthorizationEndpoint {
         String grantType = parameters.get("grant_type");
         // It is not the client_id we got from partner, but the client id we vend out to partner (partnerId).
         String partnerId = parameters.get("client_id");
-        String authorizationCode = parameters.get("code");
+        String authorizationCode = parameters.get("code"); // LWA authorization code
+
+        String clientAccessToken = new BearerTokenExtractor().extract(context).getName();
 
         if (!StringUtils.equals(grantType, GRANT_TYPE)) {
             throw new UnsupportedGrantTypeException("Only reciprocal_authorization_code is supported in this endpoint");
@@ -77,6 +93,11 @@ public class ReciprocalAuthorizationEndpoint {
             createAccessTokenRequest(authorizationCode));
 
         partnerTokenRepository.saveAccessToken(resourceDetails, auth, accessToken);
+
+        // Baby profiles corresponding to a user must be published to Alexa during account linking and when the
+        // profile changes after account linking. Following code publishes the profiles when customer enables the
+        // skill and does account linking. To publish profiles outside of account linking, use publish profiles endpoint.
+        babyActivityProfilePublisher.publishProfiles(clientAccessToken, partnerId);
     }
 
     /**
@@ -90,5 +111,4 @@ public class ReciprocalAuthorizationEndpoint {
         accessTokenRequest.setAuthorizationCode(authorizationCode);
         return accessTokenRequest;
     }
-
 }

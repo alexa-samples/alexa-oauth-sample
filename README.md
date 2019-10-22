@@ -1,7 +1,8 @@
-# Alexa OAuth Sample
-This is sample code for Alexa Skill developers to set up an OAuth 2.0 server. 
+# Alexa OAuth Sample with Baby activity skill account linking
+This is sample code for Alexa Skill developers to set up an OAuth 2.0 server.
 An OAuth 2.0 server is required for Skill account linking, which lets you connect user identities across different account systems.
-Reciprocal authorization and client token management are also included to support mutual account linking for calling Alexa APIs outside of Alexa Skills.
+
+Reciprocal authorization and client token management are also included to support mutual account linking for calling Alexa APIs outside of Alexa Skills. *Only for baby activity skills*, Reciprocal authorization endpoint will identify baby activity user profiles based on the bearer access token in the header and sends the profiles to Alexa.
 
 # Description
 ## Supported Grant Types
@@ -18,8 +19,9 @@ and an Alexa specific grant type (for reciprocal account linking):
 ## Endpoints
 * **/oauth/authorize**: The authorization endpoint is the endpoint on the authorization server where the resource owner logs in, and grants authorization to the client application.
 * **/oauth/token**: The token endpoint is the endpoint on the authorization server where the client application exchanges the authorization code, client ID and client secret, for an access token.
-* **/api/reciprocal/authorize**: The reciprocal authorization endpoint will be invoked by Alexa to send a LWA auth code. *(Only required for mutual account linking)*
-
+* **/api/reciprocal/authorize** *(Only required for mutual account linking)*: The reciprocal authorization endpoint will be invoked by Alexa to send a LWA auth code.*(Only required for mutual account linking of baby activity skills)*
+ For baby activity skills, The reciprocal authorization endpoint will build the baby profiles for the user corresponding to access token in the reciprocal authorization request header. The endpoint will request refresh and access tokens using LWA auth code in the request and use it send the baby activity user profiles to Alexa API.
+* **/api/profiles/publish** *(Only for baby activity skills)*: This endpoint can be used to publish baby activity profiles for a user.
 ## OAuth Management Portal
 * **/login**: The portal used for administration of OAuth Clients and Partners, as well as users to manage their approvals to other clients.
 
@@ -39,8 +41,8 @@ public class AuthenticationServiceProvider {
 
 # Server Setup
 To setup your own OAuth server,
-1. Clone the repository from [alexa-oauth-sample](https://github.com/alexa/alexa-oauth-sample). Optionally, you can modify the repository name
-2. ![CreateStack](images/cloudformation-launch-stack.png) with this [template](https://github.com/alexa/alexa-oauth-sample/blob/master/template.json)
+1. Clone the repository from [alexa-oauth-sample](https://github.com/alexa/alexa-oauth-sample). Optionally, you can modify the repository name.
+2. ![CreateStack](images/cloudformation-launch-stack.png) with this [template](https://github.com/alexa/alexa-oauth-sample/blob/master/template.json). Make sure to use the branch that has code to send profiles for baby activity skills. By default, the branch name will be master_account_linking_baby_activity_skills
 3. Add your Domain Certificate and bind it to your load balancer (LB port: 443, Instance port: 80). *(HTTPS is required for Alexa Skill Account Linking)*
 
 ![CreateStack](images/Infrastructure.png)
@@ -72,7 +74,8 @@ To setup your own OAuth server,
    * Scope: OAuth scopes to define the permissions. (This is used for your resource server, leave empty if you do not have one)
    * Domain List: YOUR DOMAIN (e.g. domain.com, www.domain.com)
 
-
+# Reciprocal Authorization Endpoint for Baby Activity Skills
+When user enables baby activity skill, Alexa requires reciprocal authorization endpoint registered in AccountLinking section during skill onboarding to send baby activity user profiles to Alexa. See [account-linking-for-health](https://developer.amazon.com/docs/account-linking/account-linking-for-health.html) for more details.  
 
 # License
 This library is licensed under the [Amazon Software License 1.0](LICENSE).
