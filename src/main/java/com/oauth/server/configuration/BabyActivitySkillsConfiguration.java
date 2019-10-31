@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 
+import java.util.concurrent.Executors;
+
 @Configuration
 public class BabyActivitySkillsConfiguration {
 
@@ -21,6 +23,6 @@ public class BabyActivitySkillsConfiguration {
     @Bean
     public BabyActivityProfilePublisher babyActivityProfilePublisher() {
         return new BabyActivityProfilePublisher(tokenStore, partnerTokenManager,
-                new HttpClientFactory());
+                new HttpClientFactory(), Executors.newSingleThreadExecutor());
     }
 }

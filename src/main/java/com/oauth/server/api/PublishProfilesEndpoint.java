@@ -37,9 +37,6 @@ public class PublishProfilesEndpoint {
     public void publishProfiles(final @RequestBody @RequestParam Map<String, String> parameters) {
         String partnerId = parameters.get("partner_id");
         String clientAccessToken = new BearerTokenExtractor().extract(context).getName();
-        if (clientAccessToken == null) {
-            throw new IllegalArgumentException("Bearer Token must be provided.");
-        }
         if (partnerId == null) {
             throw new IllegalArgumentException("PartnerId parameter must be specified.");
         }

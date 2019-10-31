@@ -30,6 +30,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * Responsible for publishing baby activity profiles for a user on behalf of a partner to Alexa.
@@ -64,12 +66,16 @@ public class BabyActivityProfilePublisher {
 
     private final HttpClientFactory httpClientFactory;
 
+    private final ExecutorService asyncExecutor;
+
     public BabyActivityProfilePublisher(final TokenStore tokenStore,
                                         final PartnerTokenManager partnerTokenManager,
-                                        final HttpClientFactory httpClientFactory) {
+                                        final HttpClientFactory httpClientFactory,
+                                        final ExecutorService asyncExecutor) {
         this.tokenStore = tokenStore;
         this.partnerTokenManager = partnerTokenManager;
         this.httpClientFactory = httpClientFactory;
+        this.asyncExecutor = asyncExecutor;
     }
 
     /**
@@ -87,6 +93,11 @@ public class BabyActivityProfilePublisher {
         final OAuth2AccessToken lwaAccessToken = partnerTokenManager.getAccessToken(userId, partnerId);
         publishProfilesForUser(userId, lwaAccessToken);
     }
+
+    public void publishProfilesAsync(final String clientAccessToken, final String partnerId) {
+        asyncExecutor.execute(() -> publishProfiles(clientAccessToken, partnerId));
+    }
+
 
     private void publishProfilesForUser(final String userId, final OAuth2AccessToken lwaAccessToken) {
         final Set<Profile> profiles = MOCK_BABY_PROFILES.get(userId);

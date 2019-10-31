@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.Matchers.any;
@@ -62,7 +63,7 @@ public class BabyActivityProfilePublisherTest {
     public void setup() {
         when(mockHttpClientFactory.createDefault()).thenReturn(mockHttpClient);
         babyActivityProfilePublisher = new BabyActivityProfilePublisher(mockTokenStore,
-                mockTokenManager, mockHttpClientFactory);
+                mockTokenManager, mockHttpClientFactory, mock(ExecutorService.class));
     }
 
     @Test

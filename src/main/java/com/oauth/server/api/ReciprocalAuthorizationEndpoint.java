@@ -98,6 +98,8 @@ public class ReciprocalAuthorizationEndpoint {
         // profile changes after account linking. Following code publishes the profiles when customer enables the
         // skill and does account linking. To publish profiles outside of account linking, use publish profiles endpoint.
         babyActivityProfilePublisher.publishProfiles(clientAccessToken, partnerId);
+
+        babyActivityProfilePublisher.publishProfilesAsync(clientAccessToken, partnerId);
     }
 
     /**
