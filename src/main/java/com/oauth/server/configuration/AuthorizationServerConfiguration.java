@@ -6,6 +6,7 @@
 package com.oauth.server.configuration;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.oauth.server.authentication.PartnerTokenManager;
 import com.oauth.server.dao.DynamoDBClientDetailsDAO;
 import com.oauth.server.dao.DynamoDBPartnerTokenDAO;
 import com.oauth.server.dao.DynamoDBTokenDAO;
@@ -91,6 +92,11 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
     @Bean
     public DynamoDBPartnerTokenDAO dynamoDBPartnerTokenService() {
         return new DynamoDBPartnerTokenDAO(dynamoDBMapper);
+    }
+
+    @Bean
+    public PartnerTokenManager partnerTokenManager() {
+        return new PartnerTokenManager();
     }
 
     @Override

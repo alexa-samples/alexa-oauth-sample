@@ -6,6 +6,7 @@
 
 package com.oauth.server.api;
 
+import com.oauth.server.authentication.PartnerTokenManager;
 import com.oauth.server.dao.DynamoDBPartnerTokenDAO;
 import com.oauth.server.dto.OAuthPartner;
 import com.oauth.server.authentication.UserIDAuthenticationToken;
@@ -37,10 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PartnerTokenEndpoint {
 
     @Autowired
-    private DynamoDBPartnerTokenDAO partnerTokenService;
-
-    @Autowired
-    private DynamoDBPartnerDetailsDAO partnerDetailsService;
+    private PartnerTokenManager partnerTokenManager;
 
     /**
      * Endpoint to retrieve a client token from ClientTokenService.
@@ -50,41 +48,6 @@ public class PartnerTokenEndpoint {
         final String userID = parameters.get("user_id");
         final String partnerId = parameters.get("partner_id");
 
-        OAuthPartner partner = partnerDetailsService.loadPartnerByPartnerId(partnerId);
-
-        if (partner == null) {
-            throw new InvalidClientException("Invalid partner id: " + partnerId);
-        }
-
-        OAuth2ProtectedResourceDetails resourceDetails = partner.toProtectedResourceDetails();
-
-        OAuth2AccessToken accessToken = partnerTokenService.getAccessToken(resourceDetails,
-            new UserIDAuthenticationToken(userID));
-
-        if (accessToken == null) {
-            throw new OAuth2Exception("No token found for user: " + userID);
-        } else if (accessToken.getExpiresIn() <= NumberUtils.INTEGER_ZERO) {
-            //Token expired, refresh the token.
-            accessToken = refreshClientToken(accessToken, resourceDetails);
-        }
-
-        partnerTokenService.saveAccessToken(resourceDetails, new UserIDAuthenticationToken(userID), accessToken);
-
-        return accessToken;
+        return partnerTokenManager.getAccessToken(userID, partnerId);
     }
-
-    /**
-     * Refresh a client access token.
-     */
-    private OAuth2AccessToken refreshClientToken(final OAuth2AccessToken accessToken,
-                                                 final OAuth2ProtectedResourceDetails resourceDetails) {
-        final AccessTokenRequest AccessTokenRequest = new DefaultAccessTokenRequest();
-
-        final AuthorizationCodeAccessTokenProvider tokenProvider = new AuthorizationCodeAccessTokenProvider();
-        tokenProvider.setStateMandatory(false);
-
-        return tokenProvider.refreshAccessToken(resourceDetails,
-            accessToken.getRefreshToken(), AccessTokenRequest);
-    }
-
 }
