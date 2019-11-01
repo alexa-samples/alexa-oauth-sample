@@ -23,6 +23,6 @@ public class BabyActivitySkillsConfiguration {
     @Bean
     public BabyActivityProfilePublisher babyActivityProfilePublisher() {
         return new BabyActivityProfilePublisher(tokenStore, partnerTokenManager,
-                new HttpClientFactory(), Executors.newSingleThreadExecutor());
+                new HttpClientFactory(), Executors.newCachedThreadPool());
     }
 }
