@@ -63,8 +63,7 @@ public class PartnerTokenEndpoint {
 
         if (accessToken == null) {
             throw new OAuth2Exception("No token found for user: " + userID);
-        } else if (accessToken.getExpiresIn() <= NumberUtils.INTEGER_ZERO) {
-            //Token expired, refresh the token.
+        } else {
             accessToken = refreshClientToken(accessToken, resourceDetails);
         }
 
