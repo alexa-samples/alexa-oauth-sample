@@ -76,6 +76,7 @@ public class ReciprocalAuthorizationEndpoint {
         OAuth2AccessToken accessToken = tokenProvider.obtainAccessToken(resourceDetails,
             createAccessTokenRequest(authorizationCode));
 
+        partnerTokenRepository.removeAccessToken(resourceDetails, auth);
         partnerTokenRepository.saveAccessToken(resourceDetails, auth, accessToken);
     }
 
