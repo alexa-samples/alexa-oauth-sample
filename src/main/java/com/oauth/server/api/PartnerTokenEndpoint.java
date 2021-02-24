@@ -67,6 +67,7 @@ public class PartnerTokenEndpoint {
             accessToken = refreshClientToken(accessToken, resourceDetails);
         }
 
+        partnerTokenService.removeAccessToken(resourceDetails, new UserIDAuthenticationToken(userID));
         partnerTokenService.saveAccessToken(resourceDetails, new UserIDAuthenticationToken(userID), accessToken);
 
         return accessToken;
