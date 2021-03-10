@@ -37,6 +37,8 @@ public class AuthenticationServiceProvider implements AuthenticationProvider, Au
     private static final List<User> mockUsers = ImmutableList.of(
         new User("user", "$2a$10$tNrknh3ZtTQ4IWq.P1KSaOwIar7ToOM1TjQTmuxGIIjYCJvy.55uS",
             ImmutableList.of()),
+        new User("user2", "$2a$10$tNrknh3ZtTQ4IWq.P1KSaOwIar7ToOM1TjQTmuxGIIjYCJvy.55uS",
+            ImmutableList.of()),
         new User("admin", "$2a$10$tNrknh3ZtTQ4IWq.P1KSaOwIar7ToOM1TjQTmuxGIIjYCJvy.55uS",
             ImmutableList.of(new SimpleGrantedAuthority(RoleEnum.ROLE_USER_ADMIN.name()))));
 
